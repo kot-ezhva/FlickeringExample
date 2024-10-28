@@ -1,37 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import React, { useEffect, useMemo, useState } from "react";
+import { Image, useWindowDimensions } from "react-native";
+import { Stack } from "expo-router";
+import { useFonts } from "expo-font";
+import { ThemedView } from "@/components/ThemedView";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+const App = ({ isReady = false }: { isReady: boolean }) => {
+  const { width: deviceWidth } = useWindowDimensions();
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
+  if (!isReady) {
+    return (
+      <ThemedView style={{ flex: 1 }}>
+        {/** Any image componet, e.g. FastImage, Image from expo-image, etc. **/}
+        <Image
+          source={require("../assets/images/splash.png")}
+          resizeMode="contain"
+          style={{ width: deviceWidth, flex: 1 }}
+        />
+      </ThemedView>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Stack screenOptions={{}}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+    </Stack>
   );
+};
+
+export default function RootLayout() {
+  const [active, setActive] = useState<boolean>(false);
+  const [fontsLoaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
+
+  const appReady = useMemo(() => {
+    return fontsLoaded && active;
+  }, [fontsLoaded, active]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setActive(true);
+    }, 1.5 * 1000);
+  }, []);
+
+  return <App isReady={appReady} />;
 }
